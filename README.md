@@ -49,6 +49,7 @@ Exit code: `0` clean, `1` warnings, `2` critical. You can drop it in cron or CI.
 
 - **It never places, edits or cancels an order.** There is no code path for it, see `adapters.py`.
 - It doesn't send a nonce on Kraken Futures, so it can't push your bot's nonce threshold.
+- **If it cannot read the exchange, it reports `CHECK_FAILED` (critical), never "clean".** A watchdog that goes silent when blind is worse than none.
 - The core rules are pure functions with unit tests (`pytest`).
 
 ## Status

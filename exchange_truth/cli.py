@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 
 from .adapters import from_ccxt, from_freqtrade
-from .core import check
+from .core import Finding, check
 
 ICON = {"CRITICAL": "🚨", "WARN": "⚠️", "INFO": "ℹ️"}
 
@@ -63,9 +63,10 @@ def main(argv=None):
     while True:
         try:
             positions, orders, findings = run_once(a)
-        except Exception as e:  # an unreachable exchange is itself worth knowing
-            positions, orders, findings = [], [], []
-            print(f"error: {e}", file=sys.stderr)
+        except Exception as e:
+            # Never report "clean" when we could not look: silence must not mean safety.
+            positions, orders = [], []
+            findings = [Finding("CRITICAL", "CHECK_FAILED", "*", f"could not read the exchange: {type(e).__name__}: {e}")]
         if a.attest:
             print(json.dumps(attestation(a.exchange, positions, orders, findings), sort_keys=True))
         elif a.json:

@@ -67,3 +67,12 @@ def test_attestation_hash_detects_tampering():
     assert hashlib.sha256(json.dumps(att, sort_keys=True, separators=(",", ":")).encode()).hexdigest() == h
     att["positions"][0]["amount"] = 2.0
     assert hashlib.sha256(json.dumps(att, sort_keys=True, separators=(",", ":")).encode()).hexdigest() != h
+
+
+def test_unreachable_exchange_is_critical_not_clean(monkeypatch):
+    from exchange_truth import cli
+
+    def boom(a):
+        raise ConnectionError("503 Service Unavailable")
+    monkeypatch.setattr(cli, "run_once", boom)
+    assert cli.main(["--exchange", "krakenfutures"]) == 2
