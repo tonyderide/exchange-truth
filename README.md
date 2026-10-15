@@ -18,6 +18,8 @@ The checks are side-aware. For a short, a buy-stop **above** the price is a stop
 
 ## Why
 
+See **[docs/INCIDENTS.md](docs/INCIDENTS.md)**: 8 real ways a stop loss is silently missing.
+
 Your bot reports its own beliefs, and those are exactly what fail. Over 7 months of running a grid bot live on Kraken Futures, we hit every one of these issues:
 
 - the API answered "success" with an order id for orders that **never existed**;
