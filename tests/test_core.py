@@ -57,3 +57,13 @@ def test_bot_mismatches():
     assert codes(f) == ["BOT_GHOST_TRADE", "SIZE_MISMATCH"]
     f = check([SHORT], [sl()], [])
     assert codes(f) == ["UNTRACKED_POSITION"]
+
+
+def test_attestation_hash_detects_tampering():
+    import hashlib, json
+    from exchange_truth.cli import attestation
+    att = attestation("x", [SHORT], [sl()], [])
+    h = att.pop("sha256")
+    assert hashlib.sha256(json.dumps(att, sort_keys=True, separators=(",", ":")).encode()).hexdigest() == h
+    att["positions"][0]["amount"] = 2.0
+    assert hashlib.sha256(json.dumps(att, sort_keys=True, separators=(",", ":")).encode()).hexdigest() != h

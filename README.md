@@ -37,6 +37,8 @@ python -m exchange_truth.cli --exchange binanceusdm --freqtrade-url http://127.0
 python -m exchange_truth.cli --exchange bybit --watch 60 --telegram                         # + TG_TOKEN/TG_CHAT
 ```
 
+`--attest` prints a hash-sealed JSON record (UTC time, raw snapshot, findings, sha256), useful as evidence for a dispute or a post-mortem.
+
 Exit code: `0` clean, `1` warnings, `2` critical. You can drop it in cron or CI.
 
 ```

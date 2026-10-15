@@ -3,6 +3,8 @@
 Read-only. Use an API key WITHOUT trading/withdrawal permission.
 """
 import argparse
+import dataclasses
+import hashlib
 import json
 import os
 import sys
@@ -19,6 +21,19 @@ ICON = {"CRITICAL": "🚨", "WARN": "⚠️", "INFO": "ℹ️"}
 def telegram(token, chat, text):
     data = urllib.parse.urlencode({"chat_id": chat, "text": text}).encode()
     urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data=data, timeout=15)
+
+
+def attestation(exchange, positions, orders, findings):
+    """Self-contained, hash-sealed record of what the exchange held at a given time.
+
+    The sha256 covers the canonical JSON of everything else, so any later edit is detectable.
+    (Integrity only: a signature proving *who* attested is future work.)
+    """
+    body = {"tool": "exchange-truth/0.1", "exchange": exchange, "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "positions": [dataclasses.asdict(x) for x in positions], "orders": [dataclasses.asdict(x) for x in orders],
+            "findings": [dataclasses.asdict(x) for x in findings]}
+    body["sha256"] = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return body
 
 
 def run_once(a):
@@ -38,6 +53,8 @@ def main(argv=None):
     p.add_argument("--key-env", default="ET_API_KEY"); p.add_argument("--secret-env", default="ET_API_SECRET")
     p.add_argument("--freqtrade-url", help="compare with a freqtrade bot (REST API); creds in FT_USER/FT_PASS")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--attest", action="store_true",
+                   help="print a JSON attestation: UTC time, exchange snapshot, findings and their sha256")
     p.add_argument("--watch", type=int, default=0, help="re-check every N seconds")
     p.add_argument("--telegram", action="store_true", help="alert via TG_TOKEN/TG_CHAT on new findings")
     a = p.parse_args(argv)
@@ -49,7 +66,9 @@ def main(argv=None):
         except Exception as e:  # an unreachable exchange is itself worth knowing
             positions, orders, findings = [], [], []
             print(f"error: {e}", file=sys.stderr)
-        if a.json:
+        if a.attest:
+            print(json.dumps(attestation(a.exchange, positions, orders, findings), sort_keys=True))
+        elif a.json:
             print(json.dumps([f.__dict__ for f in findings]))
         else:
             print(f"{time.strftime('%F %T')}  {len(positions)} positions, {len(orders)} open orders, "
