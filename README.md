@@ -47,6 +47,18 @@ Exit code: `0` clean, `1` warnings, `2` critical. You can drop it in cron or CI.
 2026-10-15 17:50:16  1 positions, 3 open orders, 0 findings
 ```
 
+## As an MCP tool for AI agents
+
+If an agent (Claude Code, Claude Desktop, Cursor…) runs or supervises your bot, give it a second pair of eyes:
+
+```json
+{ "mcpServers": { "exchange-truth": {
+    "command": "python", "args": ["-m", "exchange_truth.mcp_server"],
+    "env": { "ET_API_KEY": "<read-only key>", "ET_API_SECRET": "<secret>" } } } }
+```
+
+Tools: `check_exchange(exchange_id, compare_freqtrade=false)` and `attest_exchange(exchange_id)`. Keys stay in the server's environment and never pass through the agent. Requires `pip install "mcp>=2"`.
+
 ## Guarantees
 
 - **It never places, edits or cancels an order.** There is no code path for it, see `adapters.py`.

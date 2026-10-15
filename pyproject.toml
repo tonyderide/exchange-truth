@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Read-only watchdog: does your exchange really hold what your trading bot thinks?"
 requires-python = ">=3.8"
 dependencies = ["ccxt"]
+
+[project.optional-dependencies]
+mcp = ["mcp>=2"]
 license = {text = "MIT"}
 
 [project.scripts]
 exchange-truth = "exchange_truth.cli:main"
+exchange-truth-mcp = "exchange_truth.mcp_server:main"
