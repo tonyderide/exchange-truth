@@ -6,7 +6,6 @@ so every rule is unit-testable on plain values.
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-STOP_TYPES = {"stop", "stop_market", "stop_loss", "stop-loss", "stop_limit", "stop-limit", "trigger", "conditional"}
 
 
 @dataclass
@@ -47,7 +46,9 @@ class Finding:
 
 
 def _is_stop(o: Order) -> bool:
-    return o.stop_price is not None and (o.type in STOP_TYPES or "stop" in o.type or "trigger" in o.type)
+    # Any order carrying a trigger price is conditional, whatever its type label:
+    # ccxt reports Hyperliquid stops as type "market" + triggerPrice.
+    return o.stop_price is not None
 
 
 def _closing_side(p: Position) -> str:
