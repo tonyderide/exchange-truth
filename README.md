@@ -48,6 +48,12 @@ Exit code: `0` clean, `1` warnings, `2` critical. You can drop it in cron or CI.
 2026-10-15 17:50:16  1 positions, 3 open orders, 0 findings
 ```
 
+Real output, live on Kraken Futures on 2026-10-16. The position was partially closed by hand, and the stop was left at the old size:
+```
+2026-10-16 15:10:05  1 positions, 1 open orders, 1 findings
+  ℹ️ INFO     STOP_OVERSIZED         SOL/USD:USD: stop covers 0.24 but position is 0.18 (not resized after a partial exit?)
+```
+
 ## As an MCP tool for AI agents
 
 If an agent (Claude Code, Claude Desktop, Cursor…) runs or supervises your bot, give it a second pair of eyes:
