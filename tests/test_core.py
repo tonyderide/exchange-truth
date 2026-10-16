@@ -76,3 +76,8 @@ def test_unreachable_exchange_is_critical_not_clean(monkeypatch):
         raise ConnectionError("503 Service Unavailable")
     monkeypatch.setattr(cli, "run_once", boom)
     assert cli.main(["--exchange", "krakenfutures"]) == 2
+
+
+def test_single_oversized_stop_is_info():
+    f = check([SHORT], [sl(amount=2.0)])
+    assert [(x.code, x.severity) for x in f] == [("STOP_OVERSIZED", "INFO")]

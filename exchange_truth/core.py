@@ -95,6 +95,13 @@ def check(positions: List[Position], orders: List[Order], bot_trades: Optional[L
                 out.append(Finding("WARN", "DUPLICATE_STOPS", p.symbol,
                                    f"{len(sls)} stop orders cover {covered} for a {p.amount} position",
                                    {"orders": [o.id for o in sls]}))
+            elif covered > p.amount * (1 + size_tolerance):
+                # A single reduce-only stop larger than the position: the stop was not resized after a partial
+                # exit. The exchange will cap it, but some bots then book the ORIGINAL size as filled
+                # (e.g. freqtrade#13671 on Hyperliquid), overstating profit/loss.
+                out.append(Finding("INFO", "STOP_OVERSIZED", p.symbol,
+                                   f"stop covers {covered} but position is {p.amount} (not resized after a partial exit?)",
+                                   {"covered": covered, "position": p.amount}))
 
     for o in orders:
         if o.reduce_only and o.symbol not in pos_symbols:
