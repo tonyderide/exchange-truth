@@ -81,3 +81,12 @@ def test_unreachable_exchange_is_critical_not_clean(monkeypatch):
 def test_single_oversized_stop_is_info():
     f = check([SHORT], [sl(amount=2.0)])
     assert [(x.code, x.severity) for x in f] == [("STOP_OVERSIZED", "INFO")]
+
+
+def test_worst_case():
+    from exchange_truth.core import worst_case
+    short = Position("X", "short", 2.0, mark=100.0, entry=100.0)
+    long_ = Position("Y", "long", 1.0, mark=50.0, entry=50.0)
+    orders = [sl(stop=110.0, amount=2.0), Order("y", "Y", "sell", "stop", 1.0, stop_price=45.0, reduce_only=True)]
+    assert worst_case([short, long_], orders) == {"loss_at_stops": 25.0, "unbounded": []}
+    assert worst_case([short], [])["unbounded"] == ["X"]

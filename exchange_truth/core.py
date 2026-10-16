@@ -127,3 +127,17 @@ def check(positions: List[Position], orders: List[Order], bot_trades: Optional[L
                 out.append(Finding("WARN", "UNTRACKED_POSITION", k[0],
                                    f"exchange holds {k[1]} {amt} that the bot does not know about"))
     return out
+
+
+def worst_case(positions: List[Position], orders: List[Order], bot_entry: bool = True) -> dict:
+    """Loss if every position hits its (tightest) stop loss now, measured from the entry price when known
+    (otherwise from the mark). Positions without a stop are reported as unbounded."""
+    total, unbounded = 0.0, []
+    for p in positions:
+        sls = [o for o in orders if _is_stop_loss_for(o, p)]
+        if not sls:
+            unbounded.append(p.symbol); continue
+        ref = p.entry if (bot_entry and p.entry) else p.mark
+        stop = min(o.stop_price for o in sls) if p.side == "short" else max(o.stop_price for o in sls)
+        total += (stop - ref) * p.amount if p.side == "short" else (ref - stop) * p.amount
+    return {"loss_at_stops": round(total, 4), "unbounded": unbounded}

@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 
 from .adapters import from_ccxt, from_freqtrade
-from .core import Finding, check
+from .core import Finding, check, worst_case
 
 ICON = {"CRITICAL": "🚨", "WARN": "⚠️", "INFO": "ℹ️"}
 
@@ -83,6 +83,10 @@ def main(argv=None):
                   f"{len(findings)} findings")
             for f in findings:
                 print(f"  {ICON.get(f.severity, '')} {f.severity:8} {f.code:22} {f.symbol}: {f.message}")
+            if positions:
+                wc = worst_case(positions, orders)
+                print(f"  worst case if all stops hit: -{wc['loss_at_stops']} (quote currency)"
+                      + (f", UNBOUNDED on {', '.join(wc['unbounded'])}" if wc['unbounded'] else ""))
         rank = {"INFO": 0, "WARN": 1, "CRITICAL": 2}
         alerting = [f for f in findings if rank[f.severity] >= rank[a.alert_min]]
         key = sorted([f.code, f.symbol] for f in alerting)
