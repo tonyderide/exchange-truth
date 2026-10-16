@@ -59,6 +59,8 @@ def main(argv=None):
                    help="print a JSON attestation: UTC time, exchange snapshot, findings and their sha256")
     p.add_argument("--watch", type=int, default=0, help="re-check every N seconds")
     p.add_argument("--telegram", action="store_true", help="alert via TG_TOKEN/TG_CHAT on new findings")
+    p.add_argument("--alert-min", choices=["INFO", "WARN", "CRITICAL"], default="WARN",
+                   help="lowest severity that triggers a Telegram alert (default WARN)")
     a = p.parse_args(argv)
 
     last = None
@@ -78,10 +80,12 @@ def main(argv=None):
                   f"{len(findings)} findings")
             for f in findings:
                 print(f"  {ICON.get(f.severity, '')} {f.severity:8} {f.code:22} {f.symbol}: {f.message}")
-        key = sorted((f.code, f.symbol) for f in findings)
-        if a.telegram and findings and key != last:
+        rank = {"INFO": 0, "WARN": 1, "CRITICAL": 2}
+        alerting = [f for f in findings if rank[f.severity] >= rank[a.alert_min]]
+        key = sorted((f.code, f.symbol) for f in alerting)
+        if a.telegram and alerting and key != last:
             telegram(os.environ["TG_TOKEN"], os.environ["TG_CHAT"],
-                     "exchange-truth\n" + "\n".join(f"{ICON.get(f.severity, '')} {f.code} {f.symbol}: {f.message}" for f in findings))
+                     "exchange-truth\n" + "\n".join(f"{ICON.get(f.severity, '')} {f.code} {f.symbol}: {f.message}" for f in alerting))
         last = key
         if not a.watch:
             return 2 if any(f.severity == "CRITICAL" for f in findings) else (1 if findings else 0)
