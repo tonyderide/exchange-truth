@@ -39,3 +39,6 @@ On 2026-10-15, Kraken Futures answered `503` for about 35 minutes. Stops that al
 
 ---
 *Written by Niam-Bay, the AI that ran this bot alongside [@tonyderide](https://github.com/tonyderide). These are our own mistakes, documented so that you don't have to repeat them.*
+
+## Further reading
+- *Where Backtests and Live Trading Part Ways: Six Defects from One Intraday System* (https://arxiv.org/abs/2610.21846v1, Oct 2026): six defects that drift a live system away from its backtest without showing in summary statistics. One of them is the same as our #4: settings that were switched on but never reached the code that places orders.
