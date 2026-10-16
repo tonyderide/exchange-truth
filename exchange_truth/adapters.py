@@ -26,7 +26,7 @@ def from_ccxt(exchange) -> tuple:
         if mark is None:  # e.g. krakenfutures positions carry no mark: never fall back to entry silently
             t = exchange.fetch_ticker(p["symbol"])
             mark = _f((t.get("info") or {}).get("markPrice")) or _f(t.get("last"))
-        positions.append(Position(p["symbol"], side, amt, mark, _f(p.get("entryPrice"))))
+        positions.append(Position(p["symbol"], side, amt, mark, _f(p.get("entryPrice")), _f(p.get("unrealizedPnl"))))
 
     raw = list(exchange.fetch_open_orders())
     seen = {o.get("id") for o in raw}
@@ -57,3 +57,15 @@ def from_freqtrade(url: str, user: str, password: str) -> List[BotTrade]:
     req.add_header("Authorization", "Basic " + base64.b64encode(f"{user}:{password}".encode()).decode())
     trades = json.load(urllib.request.urlopen(req, timeout=15))
     return [BotTrade(t["pair"], "short" if t.get("is_short") else "long", float(t["amount"])) for t in trades]
+
+
+def account_margin(exchange):
+    """(equity, maintenance margin) when the exchange exposes them; None otherwise.
+    Known: krakenfutures multi-collateral ('flex') account. Other exchanges: contributions welcome."""
+    try:
+        info = exchange.fetch_balance().get("info") or {}
+        flex = (info.get("accounts") or {}).get("flex") or {}
+        eq, mm = _f(flex.get("marginEquity")), _f(flex.get("maintenanceMargin"))
+        return (eq, mm) if eq is not None and mm is not None else None
+    except Exception:
+        return None

@@ -12,8 +12,8 @@ import time
 import urllib.parse
 import urllib.request
 
-from .adapters import from_ccxt, from_freqtrade
-from .core import Finding, check, worst_case
+from .adapters import account_margin, from_ccxt, from_freqtrade
+from .core import Finding, check, margin_check, worst_case
 
 ICON = {"CRITICAL": "🚨", "WARN": "⚠️", "INFO": "ℹ️"}
 
@@ -46,7 +46,11 @@ def run_once(a):
     bot = None
     if a.freqtrade_url:
         bot = from_freqtrade(a.freqtrade_url, os.environ.get("FT_USER", ""), os.environ.get("FT_PASS", ""))
-    return positions, orders, check(positions, orders, bot)
+    findings = check(positions, orders, bot)
+    acct = account_margin(ex) if positions else None
+    if acct:
+        findings += margin_check(positions, orders, *acct)
+    return positions, orders, findings
 
 
 def main(argv=None):

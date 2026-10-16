@@ -90,3 +90,16 @@ def test_worst_case():
     orders = [sl(stop=110.0, amount=2.0), Order("y", "Y", "sell", "stop", 1.0, stop_price=45.0, reduce_only=True)]
     assert worst_case([short, long_], orders) == {"loss_at_stops": 25.0, "unbounded": []}
     assert worst_case([short], [])["unbounded"] == ["X"]
+
+
+def test_margin_check_like_kraken_1016():
+    from exchange_truth.core import margin_check
+    # numbers seen live on 2026-10-16: equity 3.467, maintenance 1.998, loss to stops 1.498 from entry, uPnL -0.324
+    sol = Position("S", "short", 0.18, mark=104.0, entry=104.02, upnl=-0.03)
+    dot = Position("D", "short", 18.3, mark=1.175, entry=1.16062, upnl=-0.294)
+    orders = [Order("a", "S", "buy", "stop", 0.18, stop_price=107.1, reduce_only=True),
+              Order("b", "D", "buy", "stop", 18.3, stop_price=1.2122, reduce_only=True)]
+    f = margin_check([sol, dot], orders, equity=3.467, maintenance=1.998)
+    assert [x.code for x in f] == ["THIN_MARGIN_AT_STOPS"]
+    f = margin_check([sol, dot], orders, equity=2.9, maintenance=1.998)
+    assert [x.code for x in f] == ["LIQUIDATION_BEFORE_STOP"]

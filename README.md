@@ -11,6 +11,8 @@ A small, **read-only** watchdog that checks what the exchange actually has, inde
 | `BOT_GHOST_TRADE` | CRITICAL | the bot believes it holds a trade that the exchange doesn't have |
 | `DUPLICATE_STOPS` | WARN | several stops stacked on one position (race conditions after DCA, retries…) |
 | `STOP_NOT_REDUCE_ONLY` | WARN | a stop that could *open* a new position if the original one is already gone |
+| `LIQUIDATION_BEFORE_STOP` | CRITICAL | if every stop hits, account equity falls to maintenance margin or below: the exchange liquidates before your stops act (Kraken Futures multi-collateral for now) |
+| `THIN_MARGIN_AT_STOPS` | WARN | survives the stops, but with less than 20 % cushion over maintenance |
 | `STOP_OVERSIZED` | INFO | a single stop larger than the position: not resized after a partial exit (some bots then book the wrong filled size, see freqtrade#13671) |
 | `ORPHAN_ORDER` | WARN | reduce-only orders left behind after the position closed |
 | `SIZE_MISMATCH` / `UNTRACKED_POSITION` | WARN | bot and exchange disagree on size, or the exchange holds something the bot doesn't know about |

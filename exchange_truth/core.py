@@ -15,6 +15,7 @@ class Position:
     amount: float        # contracts, > 0
     mark: float          # current mark/last price
     entry: Optional[float] = None
+    upnl: Optional[float] = None   # unrealized PnL now (quote currency), if the exchange reports it
 
 
 @dataclass
@@ -141,3 +142,22 @@ def worst_case(positions: List[Position], orders: List[Order], bot_entry: bool =
         stop = min(o.stop_price for o in sls) if p.side == "short" else max(o.stop_price for o in sls)
         total += (stop - ref) * p.amount if p.side == "short" else (ref - stop) * p.amount
     return {"loss_at_stops": round(total, 4), "unbounded": unbounded}
+
+
+def margin_check(positions: List[Position], orders: List[Order], equity: float, maintenance: float) -> List[Finding]:
+    """Will the account survive until its stops? Equity when every stop hits = equity now − (remaining loss to stops).
+    If that is at or below maintenance margin, the exchange liquidates BEFORE the stops can act."""
+    wc = worst_case(positions, orders)
+    if wc["unbounded"]:
+        return []  # NAKED_POSITION already covers it
+    upnl = sum(p.upnl or 0.0 for p in positions)
+    at_stops = equity - (wc["loss_at_stops"] + upnl)
+    cushion = at_stops - maintenance
+    d = {"equity": round(equity, 4), "equity_at_stops": round(at_stops, 4), "maintenance": round(maintenance, 4)}
+    if cushion <= 0:
+        return [Finding("CRITICAL", "LIQUIDATION_BEFORE_STOP", "*",
+                        f"if stops hit, equity {at_stops:.2f} <= maintenance {maintenance:.2f}: liquidation comes first", d)]
+    if cushion < 0.2 * maintenance:
+        return [Finding("WARN", "THIN_MARGIN_AT_STOPS", "*",
+                        f"if stops hit, equity {at_stops:.2f} vs maintenance {maintenance:.2f} (cushion {cushion:.2f})", d)]
+    return []
