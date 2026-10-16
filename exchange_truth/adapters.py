@@ -26,7 +26,8 @@ def from_ccxt(exchange) -> tuple:
         if mark is None:  # e.g. krakenfutures positions carry no mark: never fall back to entry silently
             t = exchange.fetch_ticker(p["symbol"])
             mark = _f((t.get("info") or {}).get("markPrice")) or _f(t.get("last"))
-        positions.append(Position(p["symbol"], side, amt, mark, _f(p.get("entryPrice")), _f(p.get("unrealizedPnl"))))
+        positions.append(Position(p["symbol"], side, amt, mark, _f(p.get("entryPrice")),
+                                  _f(p.get("unrealizedPnl")) if p.get("unrealizedPnl") is not None else _f((p.get("info") or {}).get("unrealizedPnl"))))
 
     raw = list(exchange.fetch_open_orders())
     seen = {o.get("id") for o in raw}
