@@ -23,6 +23,9 @@ server = MCPServer("exchange-truth", instructions=(
 
 def _exchange(exchange_id: str):
     import ccxt
+    # The agent controls exchange_id: never let it reach an arbitrary attribute of the ccxt module.
+    if exchange_id not in ccxt.exchanges:
+        raise ValueError(f"unknown exchange id {exchange_id!r} (must be one of ccxt.exchanges)")
     return getattr(ccxt, exchange_id)({"apiKey": os.environ.get("ET_API_KEY", ""),
                                        "secret": os.environ.get("ET_API_SECRET", ""), "enableRateLimit": True})
 

@@ -14,3 +14,10 @@ def test_tools_listed_and_blind_check_is_critical(monkeypatch):
     assert {"check_exchange", "attest_exchange"} <= names
     r = mcp_server.check_exchange("krakenfutures")
     assert r["critical"] and r["findings"][0]["code"] == "CHECK_FAILED"
+
+
+def test_exchange_id_is_whitelisted():
+    from exchange_truth import mcp_server
+    for bad in ["__class__", "Exchange", "base", "../../etc/passwd", "os"]:
+        r = mcp_server.check_exchange(bad)
+        assert r["critical"] and "unknown exchange id" in r["findings"][0]["message"]

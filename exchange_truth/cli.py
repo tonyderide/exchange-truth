@@ -38,6 +38,8 @@ def attestation(exchange, positions, orders, findings):
 
 def run_once(a):
     import ccxt
+    if a.exchange not in ccxt.exchanges:
+        raise ValueError(f"unknown exchange id {a.exchange!r}")
     ex = getattr(ccxt, a.exchange)({"apiKey": os.environ.get(a.key_env, ""), "secret": os.environ.get(a.secret_env, ""),
                                     "enableRateLimit": True})
     positions, orders = from_ccxt(ex)
